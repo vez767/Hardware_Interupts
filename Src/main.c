@@ -18,12 +18,49 @@
 
 #include <stdint.h>
 
-#if !defined(__SOFT_FP__) && defined(__ARM_FP)
-  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
-#endif
+volatile uint8_t button_pressed = 0;
 
 int main(void)
 {
-    /* Loop forever */
-	for(;;);
+	volatile uint32_t *pRCC_AHB1ENR = (volatile uint32_t *)0x40023830;
+    *pRCC_AHB1ENR = (1 << 2);
+
+    volatile uint32_t *pRCC_APB2ENR = (volatile uint32_t *)0x40023844;
+    *pRCC_APB2ENR = (1 << 14);
+
+    volatile uint32_t *pGPIOC_MODER = (volatile uint32_t *)0x40020800;
+    *pGPIOC_MODER &= ~(3U << 13 * 2);
+
+    volatile uint32_t *pGPIOC_PUPDR = (volatile uint32_t *)0x4002080C;
+    *pGPIOC_PUPDR &= ~(3U << 13 * 2);
+    *pGPIOC_PUPDR |= (1U << 26);
+
+    volatile uint32_t *pSYSCFG_EXTICR4 = (volatile uint32_t *)0x40013814;
+    *pSYSCFG_EXTICR4 &= ~(0xFU << 4);
+    *pSYSCFG_EXTICR4 |= (0x2U << 4);
+
+    volatile uint32_t *pEXTI_FTSR = (volatile uint32_t *)0x40013C0C;
+    *pEXTI_FTSR |= (1 << 13);
+
+    volatile uint32_t *pEXTI_IMR = (volatile uint32_t *)0x40013C00;
+    *pEXTI_IMR |= (1 << 13);
+
+
+    volatile uint32_t *pNVIC_EnableIRQ = (volatile uint32_t *)0xE000E104;
+    *pNVIC_EnableIRQ |= (1 << 8);
+
+    while(1){
+
+    }
+}
+
+    void EXTI15_10_IRQHandler(void){
+
+    	volatile uint32_t *pEXTI_PR = (volatile uint32_t *)0x40013C14;
+    	if(*pEXTI_PR & (1 << 13)){
+
+    		*pEXTI_PR = (1 << 13);
+    		button_pressed = 1;
+
+    	}
 }
