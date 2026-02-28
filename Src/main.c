@@ -19,14 +19,15 @@
 #include <stdint.h>
 
 volatile uint8_t button_pressed = 0;
+volatile uint16_t pot_value = 0;
 
 int main(void)
 {
 	volatile uint32_t *pRCC_AHB1ENR = (volatile uint32_t *)0x40023830;
-    *pRCC_AHB1ENR = (1 << 2) | (1 << 0);
+    *pRCC_AHB1ENR |= (1 << 2) | (1 << 0);
 
     volatile uint32_t *pRCC_APB2ENR = (volatile uint32_t *)0x40023844;
-    *pRCC_APB2ENR = (1 << 14);
+    *pRCC_APB2ENR |= (1 << 14) | (1 << 8);
 
     volatile uint32_t *pGPIOC_MODER = (volatile uint32_t *)0x40020800;
     *pGPIOC_MODER &= ~(3U << 13 * 2);
@@ -34,6 +35,7 @@ int main(void)
     volatile uint32_t *pGPIOC_PUPDR = (volatile uint32_t *)0x4002080C;
     *pGPIOC_PUPDR &= ~(3U << 13 * 2);
     *pGPIOC_PUPDR |= (1U << 26);
+
 
     volatile uint32_t *pSYSCFG_EXTICR4 = (volatile uint32_t *)0x40013814;
     *pSYSCFG_EXTICR4 &= ~(0xFU << 4);
@@ -53,7 +55,18 @@ int main(void)
     *pGPIOA_MODER &= ~(3U << 5 * 2);
     *pGPIOA_MODER |= (1 << 5 * 2);
 
+    *pGPIOA_MODER |= (3U << 0);
+
+    volatile uint32_t *pADC_CR2 = (volatile uint32_t *)0x40012008;
+    *pADC_CR2 |= (1 << 0);
+
+    volatile uint32_t *pADC_SQR3 = (volatile uint32_t *)0x40012034;
+    *pADC_SQR3 &= ~(0x1FU << 0);
+
+
 	volatile uint32_t *pGPIOA_ODR = (volatile uint32_t *)0x40020014;
+    volatile uint32_t *pADC_DR = (volatile uint32_t *)0x4001204C;
+    volatile uint32_t *pADC_SR = (volatile uint32_t *)0x40012000;
 
 
     while(1){
@@ -61,6 +74,14 @@ int main(void)
     	if(button_pressed == 1){
 
     		*pGPIOA_ODR ^= (1 << 5);
+    		*pADC_CR2 |= (1 << 30);
+
+
+     while( !(*pADC_SR & (1 << 1))) {
+
+    		             }
+
+     pot_value = *pADC_DR;
     		button_pressed = 0;
     	}
 
@@ -72,7 +93,7 @@ int main(void)
     	 * Run -> Debug Configurations -> Debugger tab,
     	 *change the "Reset Behaviour" to Connect under reset
   	  	  and click "Debug"	 */
-    		__asm volatile ("wfi");
+
     }
 }
 
