@@ -64,6 +64,15 @@ int main(void)
     		button_pressed = 0;
     	}
 
+    	/* NOTE: if you get the compilation error of "Target not Responding"
+    	 it is because the "__asm volatile ("wfi")" logic causes the CPU to sleep
+    	 in real time while uploading your code thus it not responding.
+
+    	 Follow the listed instructions to resolve it;
+    	 * Run -> Debug Configurations -> Debugger tab,
+    	 *change the "Reset Behaviour" to Connect under reset
+  	  	  and click "Debug"	 */
+    		__asm volatile ("wfi");
     }
 }
 
