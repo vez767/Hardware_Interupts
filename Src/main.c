@@ -23,7 +23,7 @@ volatile uint8_t button_pressed = 0;
 int main(void)
 {
 	volatile uint32_t *pRCC_AHB1ENR = (volatile uint32_t *)0x40023830;
-    *pRCC_AHB1ENR = (1 << 2);
+    *pRCC_AHB1ENR = (1 << 2) | (1 << 0);
 
     volatile uint32_t *pRCC_APB2ENR = (volatile uint32_t *)0x40023844;
     *pRCC_APB2ENR = (1 << 14);
@@ -49,7 +49,20 @@ int main(void)
     volatile uint32_t *pNVIC_EnableIRQ = (volatile uint32_t *)0xE000E104;
     *pNVIC_EnableIRQ |= (1 << 8);
 
+    volatile uint32_t *pGPIOA_MODER = (volatile uint32_t *)0x40020000;
+    *pGPIOA_MODER &= ~(3U << 5 * 2);
+    *pGPIOA_MODER |= (1 << 5 * 2);
+
+	volatile uint32_t *pGPIOA_ODR = (volatile uint32_t *)0x40020014;
+
+
     while(1){
+
+    	if(button_pressed == 1){
+
+    		*pGPIOA_ODR ^= (1 << 5);
+    		button_pressed = 0;
+    	}
 
     }
 }
