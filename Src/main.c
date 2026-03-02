@@ -24,13 +24,20 @@ volatile uint16_t pot_value = 0;
 int main(void)
 {
 	volatile uint32_t *pRCC_AHB1ENR = (volatile uint32_t *)0x40023830;
-    *pRCC_AHB1ENR |= (1 << 2) | (1 << 0);
+	volatile uint32_t *pRCC_APB2ENR = (volatile uint32_t *)0x40023844;
 
-    volatile uint32_t *pRCC_APB2ENR = (volatile uint32_t *)0x40023844;
+    *pRCC_AHB1ENR |= (1 << 2) | (1 << 0);
     *pRCC_APB2ENR |= (1 << 14) | (1 << 8);
 
+    volatile uint32_t *pGPIOA_MODER = (volatile uint32_t *)0x40020000;
     volatile uint32_t *pGPIOC_MODER = (volatile uint32_t *)0x40020800;
-    *pGPIOC_MODER &= ~(3U << 13 * 2);
+
+     *pGPIOC_MODER &= ~(3U << 13 * 2);
+
+     *pGPIOA_MODER &= ~(3U << 5 * 2);
+     *pGPIOA_MODER |= (1 << 5 * 2);
+
+     *pGPIOA_MODER |= (3U << 0);
 
     volatile uint32_t *pGPIOC_PUPDR = (volatile uint32_t *)0x4002080C;
     *pGPIOC_PUPDR &= ~(3U << 13 * 2);
@@ -42,26 +49,23 @@ int main(void)
     *pSYSCFG_EXTICR4 |= (0x2U << 4);
 
     volatile uint32_t *pEXTI_FTSR = (volatile uint32_t *)0x40013C0C;
-    *pEXTI_FTSR |= (1 << 13);
-
     volatile uint32_t *pEXTI_IMR = (volatile uint32_t *)0x40013C00;
+
+    *pEXTI_FTSR |= (1 << 13);
     *pEXTI_IMR |= (1 << 13);
 
 
     volatile uint32_t *pNVIC_EnableIRQ = (volatile uint32_t *)0xE000E104;
     *pNVIC_EnableIRQ |= (1 << 8);
 
-    volatile uint32_t *pGPIOA_MODER = (volatile uint32_t *)0x40020000;
-    *pGPIOA_MODER &= ~(3U << 5 * 2);
-    *pGPIOA_MODER |= (1 << 5 * 2);
 
-    *pGPIOA_MODER |= (3U << 0);
 
     volatile uint32_t *pADC_CR2 = (volatile uint32_t *)0x40012008;
-    *pADC_CR2 |= (1 << 0);
-
     volatile uint32_t *pADC_SQR3 = (volatile uint32_t *)0x40012034;
+
+    *pADC_CR2 |= (1 << 0);
     *pADC_SQR3 &= ~(0x1FU << 0);
+
 
 
 	volatile uint32_t *pGPIOA_ODR = (volatile uint32_t *)0x40020014;
