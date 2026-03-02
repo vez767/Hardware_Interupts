@@ -17,18 +17,34 @@
  */
 
 #include <stdint.h>
+#include <stdlib.h>
 
 volatile uint8_t button_pressed = 0;
 volatile uint16_t pot_value = 0;
+volatile uint16_t previous_value = 0;
+
+int update_pot_value(uint16_t new_reading){
+
+	if(abs(new_reading - previous_value) > 5 ){
+
+		previous_value = new_reading;
+
+		return new_reading;
+	}
+
+	return previous_value;
+}
 
 int main(void)
 {
+	// RCC (Clock Synchronization)
 	volatile uint32_t *pRCC_AHB1ENR = (volatile uint32_t *)0x40023830;
 	volatile uint32_t *pRCC_APB2ENR = (volatile uint32_t *)0x40023844;
 
     *pRCC_AHB1ENR |= (1 << 2) | (1 << 0);
     *pRCC_APB2ENR |= (1 << 14) | (1 << 8);
 
+    // GPIO Routing
     volatile uint32_t *pGPIOA_MODER = (volatile uint32_t *)0x40020000;
     volatile uint32_t *pGPIOC_MODER = (volatile uint32_t *)0x40020800;
 
@@ -44,34 +60,39 @@ int main(void)
     *pGPIOC_PUPDR |= (1U << 26);
 
 
+    // SYSCFG (Interrupt Routing)
     volatile uint32_t *pSYSCFG_EXTICR4 = (volatile uint32_t *)0x40013814;
     *pSYSCFG_EXTICR4 &= ~(0xFU << 4);
     *pSYSCFG_EXTICR4 |= (0x2U << 4);
 
+    //External Interrupt
     volatile uint32_t *pEXTI_FTSR = (volatile uint32_t *)0x40013C0C;
     volatile uint32_t *pEXTI_IMR = (volatile uint32_t *)0x40013C00;
 
     *pEXTI_FTSR |= (1 << 13);
     *pEXTI_IMR |= (1 << 13);
 
-
+    //NIVC
     volatile uint32_t *pNVIC_EnableIRQ = (volatile uint32_t *)0xE000E104;
     *pNVIC_EnableIRQ |= (1 << 8);
 
 
-
+    //ADC1 configuration
     volatile uint32_t *pADC_CR2 = (volatile uint32_t *)0x40012008;
     volatile uint32_t *pADC_SQR3 = (volatile uint32_t *)0x40012034;
+    volatile uint32_t *pADC_SMPR2 = (volatile uint32_t *)0x4001200C;
 
     *pADC_CR2 |= (1 << 0);
     *pADC_SQR3 &= ~(0x1FU << 0);
+    *pADC_SMPR2 |= (7U << 0);
 
 
-
+    // Execution & Data Handling
 	volatile uint32_t *pGPIOA_ODR = (volatile uint32_t *)0x40020014;
     volatile uint32_t *pADC_DR = (volatile uint32_t *)0x4001204C;
     volatile uint32_t *pADC_SR = (volatile uint32_t *)0x40012000;
 
+    *pADC_CR2 &= ~(1 << 30);
 
     while(1){
 
@@ -85,7 +106,10 @@ int main(void)
 
     		             }
 
-     pot_value = *pADC_DR;
+     volatile uint16_t current_value = *pADC_DR;
+
+     pot_value = update_pot_value(current_value);
+
     		button_pressed = 0;
     	}
 
