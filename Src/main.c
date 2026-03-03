@@ -77,14 +77,18 @@ int main(void)
     *pNVIC_EnableIRQ |= (1 << 8);
 
 
-    //ADC1 configuration
+    //ADC configuration
     volatile uint32_t *pADC_CR2 = (volatile uint32_t *)0x40012008;
     volatile uint32_t *pADC_SQR3 = (volatile uint32_t *)0x40012034;
     volatile uint32_t *pADC_SMPR2 = (volatile uint32_t *)0x4001200C;
+    volatile uint32_t *pADC_CR1 = (volatile uint32_t *)0x40012004;
 
     *pADC_CR2 |= (1 << 0);
     *pADC_SQR3 &= ~(0x1FU << 0);
     *pADC_SMPR2 |= (7U << 0);
+
+    *pADC_CR1 &= ~(3U << 24);
+    *pADC_CR1 |= (2U << 24);
 
 
     // Execution & Data Handling
