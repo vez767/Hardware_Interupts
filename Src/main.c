@@ -74,7 +74,12 @@ int main(void)
 
     //NIVC
     volatile uint32_t *pNVIC_EnableIRQ = (volatile uint32_t *)0xE000E104;
+    volatile uint32_t *pNVIC_ISER0 = (volatile uint32_t *)0xE000E100;
+
     *pNVIC_EnableIRQ |= (1 << 8);
+
+     // IRQ 18 (ADC Global Interrupt)
+     *pNVIC_ISER0 |= (1U << 18);
 
 
     //ADC configuration
@@ -83,12 +88,20 @@ int main(void)
     volatile uint32_t *pADC_SMPR2 = (volatile uint32_t *)0x4001200C;
     volatile uint32_t *pADC_CR1 = (volatile uint32_t *)0x40012004;
 
-    *pADC_CR2 |= (1 << 0);
+    *pADC_CR2 |= (1 << 0)| (1 << 1);
     *pADC_SQR3 &= ~(0x1FU << 0);
     *pADC_SMPR2 |= (7U << 0);
 
-    *pADC_CR1 &= ~(3U << 24);
-    *pADC_CR1 |= (2U << 24);
+    // Clearing RES[1:0] (Bits 25:24), AWDSGL (Bit 9), AWDCH[4:0] (Bits 4:0)
+        *pADC_CR1 &= ~((3U << 24) | (1U << 9) | (0x1FU << 0));
+
+
+        // RES = 8-bit (2U << 24)
+        // AWDEN = Watchdog Enable (1U << 23)
+        // AWDSGL = Single Channel Mode (1U << 9)
+        // AWDCH = (Channel 0) 00000
+        // AWDIE = Watchdog Interrupt Enable (1U << 6)
+        *pADC_CR1 |= (2U << 24) | (1U << 23) | (1U << 9) | (1U << 6);
 
 
     // Execution & Data Handling
@@ -98,11 +111,22 @@ int main(void)
 
     *pADC_CR2 &= ~(1 << 30);
 
+    // ADC Watch-dog Limit Thresholds
+    volatile uint32_t *pADC_HTR = (volatile uint32_t *)0x40012024;
+    volatile uint32_t *pADC_LTR = (volatile uint32_t *)0x40012028;
+
+
+    *pADC_HTR = (200U);
+    *pADC_LTR = (50U);
+
+
+
+
     while(1){
 
     	if(button_pressed == 1){
 
-    		*pGPIOA_ODR ^= (1 << 5);
+    		*pGPIOA_ODR &= ~(1 << 5);
     		*pADC_CR2 |= (1 << 30);
 
 
@@ -139,3 +163,16 @@ int main(void)
 
     	}
 }
+
+    void ADC_IRQHandler(void){
+    	 volatile uint32_t *pADC_SR = (volatile uint32_t *)0x40012000;
+    	 volatile uint32_t *pGPIOA_ODR = (volatile uint32_t *)0x40020014;
+
+    	 if (*pADC_SR & (1 << 0)){
+
+    		*pGPIOA_ODR |= (1 << 5);
+    		*pADC_SR &= ~(1 << 0);
+
+    	}
+
+      }
