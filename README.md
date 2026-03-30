@@ -17,7 +17,23 @@ This project was built in sequential testing phases to empirically prove the eff
   * *Result:* Successfully mapped physical voltage to a 0-255 digital scale, but still required CPU polling (`ADC_SR`) to verify conversion completion.
 * **Phase 4: Analog Watchdog & Dual-Interrupt Harmony (Final Architecture)**
   * Configured the ADC Continuous Conversion engine and programmed the hardware Analog Watchdog (AWD) window comparator.
-  * *Result:* Achieved a zero-polling system-critical safe state. The system autonomously monitors voltage and fires `ADC_IRQHandler` to trigger an alarm LED, requiring an EXTI button press to acknowledge and clear.
+  * *Result:* Achieved a zero-polling system-critical safe state. The system autonomously monitors voltage and fires `ADC_IRQHandler` to trigger an alarm LED, requiring an            EXTI button press to acknowledge and clear.
+
+## Hardware-in-the-Loop (HIL) Verification 
+
+https://github.com/user-attachments/assets/5c3e5522-235a-4bba-a5d4-9849dd1b1aa3 
+
+
+
+https://github.com/user-attachments/assets/2b95bada-6d4d-41dc-bb90-a58ba0e30e91
+
+**Scenario 1:** Failsafe Power-On State (Potentiometer at 0V, LED is ON).
+
+**Scenario 2:** Boundary & Range Validation (Moving into Safe Zone, Button Reset).
+
+**Scenario 3:** Autonomous Breach Detection (HTR Breach, LED snaps ON).
+
+**Scenario 4:** Safety Priority Logic (Button press ignored during active breach).
 
 ## Hardware Architecture
 * **Microcontroller:** STM32F401RE (Nucleo-64)
@@ -31,4 +47,4 @@ This project was built in sequential testing phases to empirically prove the eff
 
 ## Future Improvements (Tier 2 Integration)
 * **Safe State Fallbacks (ISO 14971):** To be implemented when transitioning to Unity/Ceedling testing to ensure the system detects if a physical sensor wire is pulled out or disconnected.
-* **Low Power States:** Integration of `__asm volatile ("wfi")` (Wait For Interrupt) to halt the CPU clock during
+* **Low Power States:** Integration of `__asm volatile ("wfi")` (Wait For Interrupt) to halt the CPU clock during idle periods, significantly reducing power consumption while maintaining near-instantaneous response to hardware events
